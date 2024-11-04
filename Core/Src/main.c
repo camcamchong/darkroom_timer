@@ -40,6 +40,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN PV */
 
@@ -78,6 +79,7 @@ int main(void)
   SystemClock_Config();
   MX_GPIO_Init();
   MX_TIM2_Init();
+
   /* USER CODE BEGIN Init */
 
   	 //Pins
@@ -92,15 +94,16 @@ int main(void)
 	//Settings
 	int timer[] = {0,0,0,0};
 	int timeOrFocus = 0; // 0 = time 1 = focus
-	int timeType[] = {0,1,2}; // 0 = mili , 1 = seconds, 2 = minutes
-
+	int timeTypes[] = {0,1,2}; // 0 = mili , 1 = seconds, 2 = minutes
+	int timeUnit = 0 ;
+	int timeIndex = 0;
 	int status = 0;
 
 
   /* USER CODE END Init */
 
   /* Configure the system clock */
-	  SystemClock_Config();
+  SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
@@ -108,6 +111,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -115,38 +119,58 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
-  {
-    /* USER CODE END WHILE */
+    {
+      /* USER CODE END WHILE */
 
-	  //if Pin has a high input flip status
-	  if(HAL_GPIO_ReadPin(GPIOA, start) == 1){
-		  status = flip(status);
-	  }
 
-	  if(status == 0){
-		  switch(timeOrFocus){
+	  //Buttons
+  	  if(HAL_GPIO_ReadPin(GPIOA, start) == 1){
+  		  status = flip(status);
+  	  }
 
-			  	  //time
-				  case 0:
+  	  if(HAL_GPIO_ReadPin(GPIOA, time_focus) == 1){
+  		  timeOrFocus = flip(timeOrFocus);
+  	  }
 
-				  break;
+  	  if(HAL_GPIO_ReadPin(GPIOA, time_selection) == 1){
+  		  timeIndex++;
 
-				  //focus
-				  case 1:
-					  HAL_GPIO_WritePin(GPIOD, relay, GPIO_PIN_SET);
-				  break;
-			  }
-	  }
-	  else{
-		  HAL_GPIO_WritePin(GPIOD, relay, GPIO_PIN_RESET);
-	  }
+  		  if(timeIndex > 2 ){
+  			  timeIndex = 0;
+  		  }
 
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
-}
+  		  timeUnit = timeType[timeIndex];
 
-void flip(int a){
+  	  }
+
+
+
+  	  if(status == 0){
+
+  		  switch(timeOrFocus){
+
+  			  	  //time
+  				  case 0:
+
+  				  break;
+
+  				  //focus
+  				  case 1:
+  					  HAL_GPIO_WritePin(GPIOD, relay, GPIO_PIN_SET);
+  				  break;
+  			  }
+  	  }
+  	  else{
+  		  HAL_GPIO_WritePin(GPIOD, relay, GPIO_PIN_RESET);
+  	  }
+
+      /* USER CODE BEGIN 3 */
+    }
+    /* USER CODE END 3 */
+ }
+
+void flip(int a)
+{
 	if( a == 0){
 		a = 1;
 	}
@@ -154,16 +178,27 @@ void flip(int a){
 		a = 0;
 	}
 	return a;
+ }
+
+//not sure if this code block belongs here
+
+void MX_TIM2_Init(void)
+{
+    htim2.Instance = TIM2;
+    htim2.Init.Prescaler = 999;  // Prescale value to make clock 1 kHz (assuming 1 MHz base clock)
+    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim2.Init.Period = 5000 - 1;  // Set for 5 seconds (5000 ms)
+    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+    {
+        Error_Handler();
+    }
 }
-
-
 /**
   * @brief System Clock Configuration
   * @retval None
   */
-
-
-
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -196,6 +231,51 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 999;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 7199;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
 }
 
 /**
