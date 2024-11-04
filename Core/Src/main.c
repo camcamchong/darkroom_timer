@@ -91,6 +91,8 @@ int main(void)
 	int timeOrFocus = 0; // 0 = time 1 = focus
 	int timeType[] = {0,1,2}; // 0 = mili , 1 = seconds, 2 = minutes
 
+	int status = 0;
+
 
   /* USER CODE END Init */
 
@@ -113,6 +115,26 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
+	  //if Pin has a high input flip status
+	  if(HAL_GPIO_ReadPin(GPIOA, start) == 1){
+		  status = flip(status);
+	  }
+
+	  if(status == 0){
+		  switch(timeOrFocus){
+
+			  	  //time
+				  case 0:
+
+				  break;
+
+				  //focus
+				  case 1:
+					  HAL_GPIO_WritePin(GPIOD, relay, GPIO_PIN_SET);
+				  break;
+			  }
+	  }
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -122,6 +144,18 @@ int main(void)
   * @brief System Clock Configuration
   * @retval None
   */
+
+void flip(int a){
+	if( a == 0){
+		a = 1;
+	}
+	else{
+		a = 0;
+	}
+	return a;
+}
+
+
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
