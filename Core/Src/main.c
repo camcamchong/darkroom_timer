@@ -46,8 +46,11 @@
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
+TIM_HandleTypeDef htim2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_TIM2_Init(void);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -66,16 +69,16 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
+  SystemClock_Config();
+  MX_GPIO_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN Init */
-
 
   	 //Pins
   	char relay[] = "A6";
@@ -97,7 +100,7 @@ int main(void)
   /* USER CODE END Init */
 
   /* Configure the system clock */
-  SystemClock_Config();
+	  SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
 
@@ -134,16 +137,14 @@ int main(void)
 				  break;
 			  }
 	  }
+	  else{
+		  HAL_GPIO_WritePin(GPIOD, relay, GPIO_PIN_RESET);
+	  }
 
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
-
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
 
 void flip(int a){
 	if( a == 0){
@@ -154,6 +155,13 @@ void flip(int a){
 	}
 	return a;
 }
+
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+
 
 
 void SystemClock_Config(void)
